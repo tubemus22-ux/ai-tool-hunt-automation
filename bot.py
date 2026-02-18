@@ -7,19 +7,41 @@ from datetime import datetime
 OPENAI_KEY = os.getenv('OPENAI_KEY')
 
 HOOKS = [
-    "This AI made me $500 yesterday",
-    "Stop using ChatGPT. This is free",
-    "I automated my income with this",
+    "This AI made me $500 yesterday (proof)",
+    "Stop using ChatGPT. This free AI is better",
+    "I automated my income with this tool",
     "Nobody talks about this AI hack",
-    "This replaced my $5K assistant"
+    "This replaced my $5K virtual assistant",
+    "ChatGPT is dead. Use this instead",
+    "I found an AI that does my job for me"
 ]
 
-TOOLS = ["Claude AI", "Midjourney", "AutoGPT", "Copy.ai", "Jasper", "Notion AI", "Canva AI", "Runway ML"]
+TOOLS = [
+    {"name": "Claude AI", "url": "claude.ai", "category": "writing"},
+    {"name": "Midjourney", "url": "midjourney.com", "category": "image"},
+    {"name": "Copy.ai", "url": "copy.ai", "category": "writing"},
+    {"name": "Jasper", "url": "jasper.ai", "category": "writing"},
+    {"name": "Notion AI", "url": "notion.so", "category": "productivity"},
+    {"name": "Canva AI", "url": "canva.com", "category": "design"},
+    {"name": "Runway ML", "url": "runwayml.com", "category": "video"},
+    {"name": "Synthesia", "url": "synthesia.io", "category": "video"}
+]
 
 def write_script(tool):
     hook = random.choice(HOOKS)
-    prompt = f"Write 58-second YouTube Short script about {tool}. Hook: {hook}. Format: Problem 10s, Demo 35s, CTA 10s. Energetic, simple words."
-    
+    prompt = f"""Create a viral 58-second YouTube Shorts script about {tool['name']}.
+
+Hook: {hook}
+
+Structure:
+- 0-3 sec: Pattern interrupt hook
+- 3-10 sec: Problem statement
+- 10-45 sec: Show the tool working (step by step)
+- 45-55 sec: Results/success
+- 55-58 sec: Call to action ("Follow for more")
+
+Make it energetic, simple words, no fluff. Include specific features of {tool['name']}."""
+
     try:
         r = requests.post(
             "https://api.openai.com/v1/chat/completions",
@@ -27,50 +49,46 @@ def write_script(tool):
             json={"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": prompt}]},
             timeout=30
         )
-        return r.json()['choices'][0]['message']['content']
-    except Exception as e:
-        print(f"Error calling OpenAI: {e}")
-        return f"{hook}. {tool} is amazing. Link in bio. Follow for more."
+        script = r.json()['choices'][0]['message']['content']
+    except:
+        script = f"{hook}. {tool['name']} is a game-changing AI tool that saves hours of work. Link in bio. Follow for daily AI tools."
+
+    return {
+        "tool": tool['name'],
+        "url": tool['url'],
+        "category": tool['category'],
+        "hook": hook,
+        "script": script,
+        "title": f"{hook} #{tool['name'].replace(' ', '')} #AI #Shorts",
+        "hashtags": f"#Shorts #AI #Tech #{tool['name'].replace(' ', '')} #Automation",
+        "created": datetime.now().isoformat()
+    }
 
 def main():
-    print(f"[{datetime.now()}] Starting...")
-    print(f"OPENAI_KEY present: {bool(OPENAI_KEY)}")
+    print(f"[{datetime.now()}] Generating scripts...")
     
-    # Create output directory in current working directory
-    script_dir = os.path.join(os.getcwd(), 'scripts')
-    os.makedirs(script_dir, exist_ok=True)
-    print(f"Created directory: {script_dir}")
+    os.makedirs('scripts', exist_ok=True)
     
-    generated = []
-    selected_tools = random.sample(TOOLS, 3)
-    print(f"Selected tools: {selected_tools}")
+    selected = random.sample(TOOLS, 3)
     
-    for tool in selected_tools:
-        print(f"Generating script for: {tool}")
-        script = write_script(tool)
+    for tool in selected:
+        data = write_script(tool)
         
-        data = {
-            "tool": tool,
-            "script": script,
-            "hook": random.choice(HOOKS),
-            "created": datetime.now().isoformat()
-        }
-        
-        # Save to scripts folder
-        safe_tool_name = tool.replace(' ', '_').replace('/', '_')
-        filename = os.path.join(script_dir, f"{safe_tool_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-        
+        # Save as JSON
+        filename = f"scripts/{tool['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(filename, 'w') as f:
             json.dump(data, f, indent=2)
         
-        generated.append(filename)
-        print(f"Created: {filename}")
-        print(f"Content length: {len(script)} characters")
-    
-    print(f"Total scripts generated: {len(generated)}")
-    
-    # List files in scripts directory to verify
-    print(f"Files in scripts directory: {os.listdir(script_dir)}")
+        # Also save as readable text
+        text_filename = filename.replace('.json', '.txt')
+        with open(text_filename, 'w') as f:
+            f.write(f"TITLE: {data['title']}\n\n")
+            f.write(f"HOOK: {data['hook']}\n\n")
+            f.write(f"SCRIPT:\n{data['script']}\n\n")
+            f.write(f"HASHTAGS: {data['hashtags']}\n")
+            f.write(f"TOOL URL: {data['url']}")
+        
+        print(f"Created: {tool['name']}")
 
 if __name__ == "__main__":
     main()
