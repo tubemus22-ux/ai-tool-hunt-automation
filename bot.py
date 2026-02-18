@@ -7,86 +7,65 @@ from datetime import datetime
 OPENAI_KEY = os.getenv('OPENAI_KEY')
 
 HOOKS = [
-    "This AI made me $500 yesterday (proof)",
-    "Stop using ChatGPT. This free AI is better",
-    "I automated my income with this tool",
     "Nobody talks about this AI hack",
-    "This replaced my $5K virtual assistant",
-    "ChatGPT is dead. Use this instead",
-    "I found an AI that does my job for me"
+    "This AI made me $500 yesterday",
+    "Stop using ChatGPT. This is free and better"
 ]
 
 TOOLS = [
-    {"name": "Claude AI", "url": "claude.ai", "category": "writing"},
-    {"name": "Midjourney", "url": "midjourney.com", "category": "image"},
-    {"name": "Copy.ai", "url": "copy.ai", "category": "writing"},
-    {"name": "Jasper", "url": "jasper.ai", "category": "writing"},
-    {"name": "Notion AI", "url": "notion.so", "category": "productivity"},
-    {"name": "Canva AI", "url": "canva.com", "category": "design"},
-    {"name": "Runway ML", "url": "runwayml.com", "category": "video"},
-    {"name": "Synthesia", "url": "synthesia.io", "category": "video"}
+    {"name": "Notion AI", "url": "notion.so", "task": "writing blog posts"},
+    {"name": "Midjourney", "url": "midjourney.com", "task": "creating images"},
+    {"name": "Canva AI", "url": "canva.com", "task": "designing graphics"}
 ]
 
 def write_script(tool):
     hook = random.choice(HOOKS)
-    prompt = f"""Create a viral 58-second YouTube Shorts script about {tool['name']}.
+    
+    # Create detailed 58-second script
+    script = f"""{hook}.
 
-Hook: {hook}
+I used to spend 3 hours {tool['task']}. It was exhausting.
 
-Structure:
-- 0-3 sec: Pattern interrupt hook
-- 3-10 sec: Problem statement
-- 10-45 sec: Show the tool working (step by step)
-- 45-55 sec: Results/success
-- 55-58 sec: Call to action ("Follow for more")
+Then I discovered {tool['name']}.
 
-Make it energetic, simple words, no fluff. Include specific features of {tool['name']}."""
+Look at this. I just type what I need.
 
-    try:
-        r = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {OPENAI_KEY}", "Content-Type": "application/json"},
-            json={"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": prompt}]},
-            timeout=30
-        )
-        script = r.json()['choices'][0]['message']['content']
-    except:
-        script = f"{hook}. {tool['name']} is a game-changing AI tool that saves hours of work. Link in bio. Follow for daily AI tools."
+[Show screen recording of {tool['name']}]
 
+Boom. Done in 30 seconds.
+
+This would have taken me hours before.
+
+{tool['name']} just saved me 10 hours this week.
+
+Link in my bio to try it free.
+
+Follow for daily AI tools that save you time."""
+    
     return {
         "tool": tool['name'],
         "url": tool['url'],
-        "category": tool['category'],
         "hook": hook,
         "script": script,
         "title": f"{hook} #{tool['name'].replace(' ', '')} #AI #Shorts",
-        "hashtags": f"#Shorts #AI #Tech #{tool['name'].replace(' ', '')} #Automation",
+        "hashtags": "#Shorts #AI #Tech #Automation",
         "created": datetime.now().isoformat()
     }
 
 def main():
-    print(f"[{datetime.now()}] Generating scripts...")
-    
     os.makedirs('scripts', exist_ok=True)
     
-    selected = random.sample(TOOLS, 3)
-    
-    for tool in selected:
+    for tool in random.sample(TOOLS, 3):
         data = write_script(tool)
         
-        # Save as JSON
-        filename = f"scripts/{tool['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        # Save as text file
+        filename = f"scripts/{tool['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
         with open(filename, 'w') as f:
-            json.dump(data, f, indent=2)
-        
-        # Also save as readable text
-        text_filename = filename.replace('.json', '.txt')
-        with open(text_filename, 'w') as f:
             f.write(f"TITLE: {data['title']}\n\n")
             f.write(f"HOOK: {data['hook']}\n\n")
             f.write(f"SCRIPT:\n{data['script']}\n\n")
             f.write(f"HASHTAGS: {data['hashtags']}\n")
-            f.write(f"TOOL URL: {data['url']}")
+            f.write(f"TOOL: {data['url']}")
         
         print(f"Created: {tool['name']}")
 
