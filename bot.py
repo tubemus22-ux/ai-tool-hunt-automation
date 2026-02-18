@@ -28,12 +28,16 @@ def write_script(tool):
             timeout=30
         )
         return r.json()['choices'][0]['message']['content']
-    except:
-        return f"{hook}. {tool} is amazing. Link in bio. Follow for more."
+    except Exception as e:
+        return f"{hook}. {tool} is amazing. Link in bio. Follow for more. (Error: {str(e)})"
 
 def main():
     print(f"[{datetime.now()}] Starting...")
     
+    # Create output directory
+    os.makedirs('scripts', exist_ok=True)
+    
+    generated = []
     for tool in random.sample(TOOLS, 3):
         script = write_script(tool)
         data = {
@@ -42,10 +46,21 @@ def main():
             "hook": random.choice(HOOKS),
             "created": datetime.now().isoformat()
         }
-        filename = f"content_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{tool.replace(' ', '')}.json"
+        
+        # Save to scripts folder
+        filename = f"scripts/{tool.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(filename, 'w') as f:
             json.dump(data, f, indent=2)
+        
+        generated.append(filename)
         print(f"Created: {filename}")
+        print(f"Content preview: {script[:100]}...")
+    
+    # Also create a summary file
+    with open('scripts/LATEST_SCRIPTS.txt', 'w') as f:
+        f.write(f"Generated on: {datetime.now()}\n\n")
+        for g in generated:
+            f.write(f"- {g}\n")
 
 if __name__ == "__main__":
     main()
