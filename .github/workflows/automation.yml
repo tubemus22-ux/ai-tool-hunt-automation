@@ -2,7 +2,7 @@ name: AI Tool Hunt Automation
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 6,12,18 * * *'  # 3 times daily (6AM, 12PM, 6PM)
   workflow_dispatch:
 
 jobs:
@@ -19,20 +19,15 @@ jobs:
       - name: Install dependencies
         run: pip install requests
       
-      - name: Run content bot
+      - name: Generate scripts
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-        run: |
-          python bot.py
-          echo "Listing files after bot runs:"
-          ls -la
-          echo "Listing scripts directory:"
-          ls -la scripts/ || echo "Scripts directory not found"
+        run: python bot.py
       
-      - name: Upload scripts as artifacts
+      - name: Upload scripts
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: generated-scripts
-          path: scripts/
-          if-no-files-found: warn
+          name: daily-scripts
+          path: |
+            scripts/*.txt
+            scripts/*.json
