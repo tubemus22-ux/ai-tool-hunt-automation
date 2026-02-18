@@ -8,12 +8,8 @@ on:
 jobs:
   build-content:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -26,20 +22,17 @@ jobs:
       - name: Run content bot
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-        run: python bot.py
-      
-      - name: Commit and push scripts
         run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git add scripts/ || true
-          git commit -m "Add generated scripts $(date)" || echo "No changes to commit"
-          git push || echo "Push failed, but continuing"
-        continue-on-error: true
+          python bot.py
+          echo "Listing files after bot runs:"
+          ls -la
+          echo "Listing scripts directory:"
+          ls -la scripts/ || echo "Scripts directory not found"
       
-      - name: Upload artifacts
+      - name: Upload scripts as artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: daily-scripts
+          name: generated-scripts
           path: scripts/
+          if-no-files-found: warn
